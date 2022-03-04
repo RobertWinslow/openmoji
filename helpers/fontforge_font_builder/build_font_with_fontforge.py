@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 '''
+Author:
+Robert Winslow
+
 To Use:
 1. Adjust the global parameters in the first section below.
 2. type `fontforge -script build_font_with_fontforge.py` in the terminal.
