@@ -25,7 +25,8 @@ docker run --name "$NAME" --rm -t -d --volume "$PWD":/wd --workdir /wd "$IMAGE" 
 
 # generate fonts
 docker exec -ti "$NAME" bash -c "/scfbuild/bin/scfbuild -c /wd/scfbuild-color.yml"
-docker exec -ti "$NAME" bash -c "/scfbuild/bin/scfbuild -c /wd/scfbuild-black.yml"
+#docker exec -ti "$NAME" bash -c "/scfbuild/bin/scfbuild -c /wd/scfbuild-black.yml"
+fontforge -script ../helpers/build_black_font_with_fontforge.py
 
 # stop container
 docker stop "$NAME"
