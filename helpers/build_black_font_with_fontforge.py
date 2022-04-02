@@ -27,10 +27,9 @@ PLACEHOLDERGEOMETRYSVG = '../black/svg/25A1.svg'
 
 font = fontforge.font()
 font.familyname = "OpenMoji"
-font.fontname = "OpenMoji Black"
 font.fullname = "OpenMoji Black Regular"
 font.copyright = "All emojis designed by OpenMoji - the open-source emoji and icon project. License: CC BY-SA 4.0"
-font.version = "v0.10 e13.1"
+font.version = "13.1.1"
 
 # The following variables are for scaling the imported outlines.
 SVGHEIGHT = 72 # units of height of source svg viewbox. 
@@ -150,7 +149,7 @@ for codepoints,filename in skintonevariants:
     else:
         print("This is a skintone variant, but I can't find a non-skintoned version:")
         print(' '.join(codepoints))
-        print("Please check whether a new case needs to be added to skintone_specialcases in build_font_with_fontforge.py")
+        print("Please check whether a new case needs to be added to skintone_specialcases in build_black_font_with_fontforge.py")
         #print(basicname)
         char = font.createChar(-1, '_'.join(components))
         char.addPosSub("mySubtable", components)
@@ -198,6 +197,7 @@ if MONOSPACEWIDTH:
 
 
 #%% FINALLY - Generate the font
+print("Generating black font to", OUTPUTFILENAME)
 font.generate(OUTPUTFILENAME)
 
 
