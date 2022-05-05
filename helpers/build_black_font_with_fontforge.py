@@ -2,7 +2,7 @@
 '''
 To Use:
 1. Adjust the global parameters in the first section below.
-2. type `fontforge -script build_font_with_fontforge.py` in the terminal.
+2. type `fontforge -script build_black_font_with_fontforge.py` in the terminal.
 
 Description:
 This script uses FontForge to build a very basic monochrome font from a folder of SVG files.
@@ -19,11 +19,13 @@ https://fontforge.org/docs/scripting/python/fontforge.html
 
 #%% SECTION ONE - Imports and parameters
 import fontforge
+import csv
 import os
 
 INPUTFOLDER = '../black/svg'
 OUTPUTFILENAME = '../font/OpenMoji-Black.ttf'
 PLACEHOLDERGEOMETRYSVG = '../black/svg/25A1.svg'
+DATACSV = '../data/openmoji.csv' #Used for skintones and alt hexcodes. Openmoji specific. 
 
 font = fontforge.font()
 font.familyname = "OpenMoji"
@@ -46,6 +48,9 @@ MONOSPACEWIDTH = GLYPHHEIGHT
 # If MAXWIDTH is unset, but MONOSPACEWIDTH is set, then some glyphs may have contours outside of their bounding box.
 MAXWIDTH = MONOSPACEWIDTH
 
+# Many glyphs have an emoji and a non-emoji presentation
+# If this is set to False, there may be inconsistent rendering across applications.
+INCLUDEALTERNATEHEXCODES = True
 
 
 
@@ -69,10 +74,12 @@ def importAndCleanOutlines(outlinefile,glyph):
             point.transform((1,0,0,1,0,PORTIONABOVEBASELINE*GLYPHHEIGHT)) # translate up to desired cap height
     glyph.setLayer(foregroundlayer,'Fore')
 
+
+
 #%% SECTION TWO B - CREATE GLYPHS FROM THE SVG SOURCE FILES
 # Scan the directory of SVG files and make a list of files and codepoints to process
 files = os.listdir(INPUTFOLDER)
-codetuples = [(filename[:-4].split('-'), filename) for filename in files if filename.endswith('.svg')]
+codetuples = [(tuple(filename[:-4].split('-')), filename) for filename in files if filename.endswith('.svg')]
 
 # Start by loading up all the single codepoint characters.
 simplecharacters = [(codepoints[0],filename) for codepoints,filename in codetuples if len(codepoints)==1]
@@ -94,19 +101,27 @@ for codepoint in missingcodepoints:
     char = font.createChar(int(codepoint,16), 'u'+codepoint)
     importAndCleanOutlines(PLACEHOLDERGEOMETRYSVG,char)
 
+
 # Now make the combination characters via FontForge's ligature feature.
 # To be quite honest, I don't fully understand what all this syntax up front is doing.
 # Just treat these next couple of lines as if they are a mystical incantation.
 font.addLookup('myLookup','gsub_ligature',None,(("liga",(('DFLT',("dflt")),)),))
 font.addLookupSubtable("myLookup", "mySubtable")
 
-# Split the skintone variants from all of the other combination characters
-SKINTONECODEPOINTS = ['1F3FF','1F3FE','1F3FD','1F3FC','1F3FB','1f3ff','1f3fe','1f3fd','1f3fc','1f3fb',]
-isSkintoneVariant  = lambda components : any(skintone in components for skintone in SKINTONECODEPOINTS)
 
+# Split the skintone variants from all of the other combination characters
+# And use the DATACSV to associate each skintone variant with its base form.
+skintoneMap = dict()
+with open(DATACSV,'r',encoding='utf-8') as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        if row['skintone'] != '':
+            codepoints = tuple(row['hexcode'].split('-'))
+            base_name = 'u'+row['skintone_base_hexcode'].replace('-','_u')
+            skintoneMap[codepoints] = base_name
 combocharacters = [(codepoints,filename) for codepoints,filename in codetuples if len(codepoints)>1]
-skintonevariants = [(codepoints,filename) for codepoints,filename in combocharacters if isSkintoneVariant(codepoints)]
-othercombos = [(codepoints,filename) for codepoints,filename in combocharacters if not isSkintoneVariant(codepoints)]
+skintonevariants = [(codepoints,filename) for codepoints,filename in combocharacters if codepoints in skintoneMap]
+othercombos = [(codepoints,filename) for codepoints,filename in combocharacters if codepoints not in skintoneMap]
 
 # Imports glyphs for all the non-skintone combination characters. 
 for codepoints,filename in othercombos:
@@ -116,45 +131,41 @@ for codepoints,filename in othercombos:
     importAndCleanOutlines(INPUTFOLDER+'/'+filename,char)
 
 # Handle the skintone variants last so that we can reference the other glyphs instead of importing redundant outlines.
-# The following links each skintone variant character to its "basic" counterpart with no skin tones.
-# There are some skintone variants that need to be manually coded in because there isn't an underlying basic version
-# And some skintone variants have the skintone selector replacing an emoji selector FE0F.
-skintone_specialcases = {
-    'u1F469_u200D_u1F91D_u200D_u1F468':'u1F46B', # woman holding hands with man
-    'u1F468_u200D_u1F91D_u200D_u1F468':'u1F46C', # men holding hands
-    'u1F469_u200D_u1F91D_u200D_u1F469':'u1F46D', # women holding hands
-    'u1F9D1_u200D_u2764_uFE0F_u200D_u1F48B_u200D_u1F9D1':'u1F48F', # two people kissing
-    'u1F9D1_u200D_u2764_uFE0F_u200D_u1F9D1':'u1F491', # couple with heart
-    'u1FAF1_u200D_u1FAF2':'u1F91D', # handshake halves -> handshake
-    }
-
+# The following links each skintone variant character to its "base" counterpart with no skin tones.
 for codepoints,filename in skintonevariants:
     components = tuple('u'+codepoint for codepoint in codepoints)
-    basicname = '_'.join(['u'+codepoint for codepoint in codepoints if codepoint not in SKINTONECODEPOINTS])
-    if font.findEncodingSlot(basicname) != -1: # This means that the basic version of the glyph exists.
-        continue
-    elif basicname in skintone_specialcases: # This means the skintone variants use different codepoints than their basic counterpart
-        basicname = skintone_specialcases[basicname]
-    else: # And otherwise, I'm assuming that the problem lies in the variation selector missing from skintone variant version.
-        basicname = '_'.join(components)
-        for skintone in SKINTONECODEPOINTS:
-            basicname = basicname.replace(skintone,'FE0F')
-    
-    # The final step is wrapped in a conditional for the sake of assisting future debugging/updates.
-    # Unfortunately, skintone variants are implemented somewhat inconsistently in the emoji standards.
-    # If a new special case is introduced, it won't *break* the font; It will just result in a duplicate glyph.
-    if font.findEncodingSlot(basicname) != -1:
-        char = font.createMappedChar(basicname) #FF's create... functions return the glyph if it already exists.
-        char.addPosSub("mySubtable", components)
-    else:
-        print("This is a skintone variant, but I can't find a non-skintoned version:")
-        print(' '.join(codepoints))
-        print("Please check whether a new case needs to be added to skintone_specialcases in build_black_font_with_fontforge.py")
-        #print(basicname)
-        char = font.createChar(-1, '_'.join(components))
-        char.addPosSub("mySubtable", components)
-        importAndCleanOutlines(INPUTFOLDER+'/'+filename,char)
+    char = font.createMappedChar(skintoneMap[codepoints]) #FF's create... functions return the glyph if it already exists.
+    char.addPosSub("mySubtable", components)
 
+
+# Include ligatures for alternate hexcodes.
+# The current algorithm iteration takes advantage of the fact that 
+# the first column of 'openmoji.csv' uses the 'fully-qualified' glyph
+# while the filename and hexcode entries use the abbreviated version
+# (No such multiple-presentation characters have been added since emoji v2.0,
+#   so it might be sensible to hardcode the list into the file.)
+def padCodepoint(codepoint):
+    # This function just sloppily deals with an annoying edgecase
+    # When glyph contain digits as codepoints, there are leading zeros in the file names.
+    if len(codepoint) == 2:
+        return '00'+codepoint
+    else:
+        return codepoint
+if INCLUDEALTERNATEHEXCODES:
+    with open(DATACSV,'r',encoding='utf-8') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Compare the codepoints of the emoji to its listed hex code...
+            newCodepoints  = tuple(hex(ord(c))[2:].upper() for c in row['emoji']) #convert glyph to hexcode tuple
+            newCodepoints = tuple(padCodepoint(codepoint) for codepoint in newCodepoints)
+            existingCodepoints = tuple(row['hexcode'].split('-'))
+            if newCodepoints != existingCodepoints:
+                # ... and create a ligature if they don't match up.
+                print("Adding alternate codepoint for ",row['emoji'], newCodepoints)
+                existingName = 'u'+'_u'.join(existingCodepoints)
+                newComponents = tuple('u'+codepoint for codepoint in newCodepoints)
+                char = font.createMappedChar(existingName) #FF's create... functions return the glyph if it already exists.
+                char.addPosSub("mySubtable", newComponents)
 
 
 
