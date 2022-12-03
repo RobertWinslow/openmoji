@@ -28,8 +28,8 @@ PLACEHOLDERGEOMETRYSVG = '../black/svg/25A1.svg'
 DATACSV = '../data/openmoji.csv' #Used for skintones and alt hexcodes. Openmoji specific. 
 
 font = fontforge.font()
-font.familyname = "OpenMoji"
-font.fullname = "OpenMoji Black Regular"
+font.familyname = "OpenMoji Black"
+font.fullname = "OpenMoji Black"
 font.copyright = "All emojis designed by OpenMoji - the open-source emoji and icon project. License: CC BY-SA 4.0"
 font.version = "14.0"
 
