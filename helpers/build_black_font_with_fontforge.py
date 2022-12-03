@@ -31,7 +31,7 @@ font = fontforge.font()
 font.familyname = "OpenMoji"
 font.fullname = "OpenMoji Black Regular"
 font.copyright = "All emojis designed by OpenMoji - the open-source emoji and icon project. License: CC BY-SA 4.0"
-font.version = "13.1.1"
+font.version = "14.0"
 
 # The following variables are for scaling the imported outlines.
 SVGHEIGHT = 72 # units of height of source svg viewbox. 
@@ -51,6 +51,13 @@ MAXWIDTH = MONOSPACEWIDTH
 # Many glyphs have an emoji and a non-emoji presentation
 # If this is set to False, there may be inconsistent rendering across applications.
 INCLUDEALTERNATEHEXCODES = True
+# In a monochrome font, skin tone variations look the same.
+# If set to False, only the base version of each glyph will be added to the font,
+#   and the skintone variants will render as sequences of glyphs (recommended True)
+INCLUDESKINTONEVARIANTS = True
+# In a monochrome font, the country flags are just blank rectangles.
+# If this is set to False, then the flags will be rendered as sequences of indicator codes.
+INCLUDECOUNTRYFLAGS = True
 
 
 
@@ -111,7 +118,9 @@ font.addLookupSubtable("myLookup", "mySubtable")
 
 # Split the skintone variants from all of the other combination characters
 # And use the DATACSV to associate each skintone variant with its base form.
+# The DATACSV is also used to indentify flag characters and optionall exclude them.
 skintoneMap = dict()
+flagSet = set()
 with open(DATACSV,'r',encoding='utf-8') as f:
     reader = csv.DictReader(f)
     for row in reader:
@@ -119,7 +128,13 @@ with open(DATACSV,'r',encoding='utf-8') as f:
             codepoints = tuple(row['hexcode'].split('-'))
             base_name = 'u'+row['skintone_base_hexcode'].replace('-','_u')
             skintoneMap[codepoints] = base_name
+        if row['subgroups'] in ['country-flag', ]: # 'subdivision-flag','flag','flags' might also reasonably be included in this list.
+            codepoints = tuple(row['hexcode'].split('-'))
+            flagSet.add(codepoints)
+
 combocharacters = [(codepoints,filename) for codepoints,filename in codetuples if len(codepoints)>1]
+if INCLUDECOUNTRYFLAGS == False:
+    combocharacters = [(codepoints,filename) for codepoints,filename in combocharacters if codepoints not in flagSet]
 skintonevariants = [(codepoints,filename) for codepoints,filename in combocharacters if codepoints in skintoneMap]
 othercombos = [(codepoints,filename) for codepoints,filename in combocharacters if codepoints not in skintoneMap]
 
@@ -132,10 +147,11 @@ for codepoints,filename in othercombos:
 
 # Handle the skintone variants last so that we can reference the other glyphs instead of importing redundant outlines.
 # The following links each skintone variant character to its "base" counterpart with no skin tones.
-for codepoints,filename in skintonevariants:
-    components = tuple('u'+codepoint for codepoint in codepoints)
-    char = font.createMappedChar(skintoneMap[codepoints]) #FF's create... functions return the glyph if it already exists.
-    char.addPosSub("mySubtable", components)
+if INCLUDESKINTONEVARIANTS:
+    for codepoints,filename in skintonevariants:
+        components = tuple('u'+codepoint for codepoint in codepoints)
+        char = font.createMappedChar(skintoneMap[codepoints]) #FF's create... functions return the glyph if it already exists.
+        char.addPosSub("mySubtable", components)
 
 
 # Include ligatures for alternate hexcodes.
