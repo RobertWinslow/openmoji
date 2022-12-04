@@ -50,6 +50,8 @@ MAXWIDTH = MONOSPACEWIDTH
 
 # Many glyphs have an emoji and a non-emoji presentation
 # If this is set to False, there may be inconsistent rendering across applications.
+# (Sadly, some applications will render the system-default-emoji when FE0F is present, 
+#   even if the font explicitly contains an FE0F in the ligature.)
 INCLUDEALTERNATEHEXCODES = True
 # In a monochrome font, skin tone variations look the same.
 # If set to False, only the base version of each glyph will be added to the font,
@@ -144,6 +146,12 @@ for codepoints,filename in othercombos:
     char = font.createChar(-1, '_'.join(components))
     char.addPosSub("mySubtable", components)
     importAndCleanOutlines(INPUTFOLDER+'/'+filename,char)
+    # Also add a ligature which excludes the FE0F selector(s)
+    if len(codepoints) > 2 and INCLUDEALTERNATEHEXCODES:
+        nonFE0Fcomponents = tuple('u'+codepoint for codepoint in codepoints if codepoint != 'FE0F')
+        if components != nonFE0Fcomponents:
+            char.addPosSub("mySubtable", nonFE0Fcomponents)
+
 
 # Handle the skintone variants last so that we can reference the other glyphs instead of importing redundant outlines.
 # The following links each skintone variant character to its "base" counterpart with no skin tones.
@@ -152,6 +160,11 @@ if INCLUDESKINTONEVARIANTS:
         components = tuple('u'+codepoint for codepoint in codepoints)
         char = font.createMappedChar(skintoneMap[codepoints]) #FF's create... functions return the glyph if it already exists.
         char.addPosSub("mySubtable", components)
+        # Also add a ligature which excludes the FE0F selector(s)
+        if len(codepoints) > 2 and INCLUDEALTERNATEHEXCODES:
+            nonFE0Fcomponents = tuple('u'+codepoint for codepoint in codepoints if codepoint != 'FE0F')
+            if components != nonFE0Fcomponents:
+                char.addPosSub("mySubtable", nonFE0Fcomponents)
 
 
 # Include ligatures for alternate hexcodes.
