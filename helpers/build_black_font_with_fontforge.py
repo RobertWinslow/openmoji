@@ -59,7 +59,7 @@ INCLUDEALTERNATEHEXCODES = True
 INCLUDESKINTONEVARIANTS = True
 # In a monochrome font, the country flags are just blank rectangles.
 # If this is set to False, then the flags will be rendered as sequences of indicator codes.
-INCLUDECOUNTRYFLAGS = True
+INCLUDECOUNTRYFLAGS = False
 
 
 
