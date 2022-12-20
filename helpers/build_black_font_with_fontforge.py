@@ -47,6 +47,8 @@ MONOSPACEWIDTH = GLYPHHEIGHT
 # Set it to 0 or None to allow characters to be extra wide.
 # If MAXWIDTH is unset, but MONOSPACEWIDTH is set, then some glyphs may have contours outside of their bounding box.
 MAXWIDTH = MONOSPACEWIDTH
+# If the following parameter is set to a positive integer, a blank 'space' character is included in the font.
+SPACEWIDTH = MONOSPACEWIDTH
 
 # Many glyphs have an emoji and a non-emoji presentation
 # If this is set to False, there may be inconsistent rendering across applications.
@@ -229,6 +231,12 @@ if MONOSPACEWIDTH:
         g.right_side_bearing = bearing
 
 
+# If the parameter is positive, include a blank glyph for 'space'.
+# For a glyph without geometry to be included in the font, FF requires its width to be manually set.
+# As such, this step must be done after everything else.
+if SPACEWIDTH:
+    spaceChar = font.createChar(32, 'u0020')
+    spaceChar.width = SPACEWIDTH
 
 
 
