@@ -74,7 +74,7 @@ INCLUDECOUNTRYFLAGS = False
 
 def importAndCleanOutlines(outlinefile,glyph):
     #print(outlinefile)
-    glyph.importOutlines(outlinefile, simplify=True, correctdir=False, accuracy=0.25, scale=False)
+    glyph.importOutlines(outlinefile, simplify=False, correctdir=False, accuracy=0.25, scale=False)
     glyph.removeOverlap()
     SCALEFACTOR = GLYPHHEIGHT/SVGHEIGHT
     foregroundlayer = glyph.foreground
@@ -247,7 +247,6 @@ if SPACEWIDTH:
 #%% FINALLY - Generate the font
 print("Generating black font to", OUTPUTFILENAME)
 font.generate(OUTPUTFILENAME)
-
 
 
 
