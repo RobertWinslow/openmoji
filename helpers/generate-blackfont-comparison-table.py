@@ -12,7 +12,7 @@ import csv
 
 DATAFILE = '../data/openmoji.csv'
 IMGFOLDER = '../black/72x72/'
-IMGTYPE = "PNG" 
+IMGTYPE = "png" 
 
 OUTPUTFILE = '../font/black-font-comparison-table.html'
 
