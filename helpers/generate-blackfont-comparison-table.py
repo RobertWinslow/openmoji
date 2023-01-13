@@ -16,7 +16,8 @@ IMGTYPE = "PNG"
 
 OUTPUTFILE = '../font/black-font-comparison-table.html'
 
-NANOEMOJIFONT = 'OpenMoji-Black.ttf'
+#NANOEMOJIFONT = 'OpenMoji-Black.ttf'
+NANOEMOJIFONT = 'OpenMoji-black-glyf/OpenMoji-black-glyf.ttf'
 FONTFORGEFONT = 'OpenMoji-Black-FontForge.ttf'
 
 
