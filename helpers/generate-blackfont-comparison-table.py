@@ -117,4 +117,65 @@ with open(OUTPUTFILE, 'w') as f:
 
 
 
+# %% NOW BUILD INDIVIDUAL TABLES FOR EACH FONT
+
+# Data for test pages for individual fonts
+# filepaths have format font/[FONTNAME]/[FONTNAME].woff2
+BLACKFONTS = ['OpenMoji-black-glyf']
+COLORFONTS = ['OpenMoji-color-cbdt','OpenMoji-color-colr0_svg','OpenMoji-color-colr1_svg',
+    'OpenMoji-color-glyf_colr_0','OpenMoji-color-glyf_colr_1','OpenMoji-color-picosvgz',
+    'OpenMoji-color-sbix','OpenMoji-color-untouchedsvgz',]
+
+BLACK_IMG_FOLDER = '../../black/72x72/'
+COLOR_IMG_FOLDER = '../../color/72x72/'
+
+STYLESTRING_SINGLEFONT = '''
+<style>
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+td {
+    vertical-align: middle;
+    text-align: center;
+}
+
+@font-face {
+  font-family: 'NanoEmoji Font';
+  src: url(FONTPLACEHOLDER);
+}
+td:nth-child(3) {
+  font-family: 'NanoEmoji Font';
+  font-size: 50px;
+  padding: 0px;
+}
+
+td:nth-child(4) {
+  font-size: 50px;
+  padding: 0px;
+}
+</style>
+
+'''
+
+bodyString_singleFont = bodyString.replace('<th>FontForge</th>','<th>System</th>',)
+
+def createComparisonTableFile(fontname,pngfolder):
+    filename = f"../font/{fontname}/font-comparison-table.html"
+    fontfilename = f"{fontname}.woff2"
+    with open(filename, 'w') as f:
+        f.write("<html><head>")
+        f.write(STYLESTRING_SINGLEFONT.replace("FONTPLACEHOLDER",fontfilename))
+        f.write("</head><body>\n<h1>Table of Non-Skintone-Variant Glyphs</h1>\n\n\n")
+        f.write(bodyString_singleFont.replace(IMGFOLDER,pngfolder))
+        f.write("</body></html>")
+
+for blackFont in BLACKFONTS:
+    createComparisonTableFile(blackFont,BLACK_IMG_FOLDER)
+
+for colorFont in COLORFONTS:
+    createComparisonTableFile(colorFont,COLOR_IMG_FOLDER)
+
+
+
 # %%
