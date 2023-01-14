@@ -20,6 +20,7 @@ OUTPUTFILE = '../font/black-font-comparison-table.html'
 NANOEMOJIFONT = 'OpenMoji-black-glyf/OpenMoji-black-glyf.ttf'
 FONTFORGEFONT = 'OpenMoji-Black-FontForge.ttf'
 
+STRIP_FE0F = False
 
 
 
@@ -32,6 +33,12 @@ with open(DATAFILE, newline='') as csvfile:
         if row['skintone_base_emoji'] == '':
             emojilist.append(row)
 
+# Remove FE0F from emojis. Messes with comparison in Firefox on MacOS
+FE0F = '️'
+if STRIP_FE0F:
+    for emoji in emojilist:
+        if emoji['emoji'][-1] == FE0F:
+            emoji['emoji'] = emoji['emoji'][:-1]
 
 
 
