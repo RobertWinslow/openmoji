@@ -89,7 +89,7 @@ td {
 }
 td:nth-child(3) {
   font-family: 'NanoEmoji Black Font';
-  font-size: 50px;
+  font-size: 55px;
   padding: 0px;
 }
 
@@ -99,7 +99,7 @@ td:nth-child(3) {
 }
 td:nth-child(4) {
   font-family: 'Fontforge Black Font';
-  font-size: 50px;
+  font-size: 55px;
   padding: 0px;
 }
 
@@ -146,12 +146,12 @@ td {
 }
 td:nth-child(3) {
   font-family: 'NanoEmoji Font';
-  font-size: 50px;
+  font-size: 55px;
   padding: 0px;
 }
 
 td:nth-child(4) {
-  font-size: 50px;
+  font-size: 55px;
   padding: 0px;
 }
 </style>
@@ -165,6 +165,7 @@ def createComparisonTableFile(fontname,pngfolder):
     fontfilename = f"{fontname}.woff2"
     with open(filename, 'w') as f:
         f.write("<html><head>")
+        f.write(f"<title>{fontname} Table</title>")
         f.write(STYLESTRING_SINGLEFONT.replace("FONTPLACEHOLDER",fontfilename))
         f.write("</head><body>\n<h1>Table of Non-Skintone-Variant Glyphs</h1>\n\n\n")
         f.write(bodyString_singleFont.replace(IMGFOLDER,pngfolder))
